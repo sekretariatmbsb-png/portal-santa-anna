@@ -4,87 +4,148 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal Lingkungan Santa Anna</title>
-    <!-- Tambahkan CSS framework jika perlu (misal Bootstrap/Tailwind) -->
+    <!-- Tambahkan CSS untuk tampilan yang lebih rapi -->
     <style>
-        body { font-family: sans-serif; margin: 20px; line-height: 1.6; }
-        .card { border: 1px solid #ddd; padding: 15px; border-radius: 5px; margin-bottom: 20px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); }
-        .metric { font-size: 24px; font-weight: bold; color: #2c3e50; }
-        .loading { color: #666; font-style: italic; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f4f7f6; color: #333; }
+        .container { max-width: 800px; margin: auto; }
+        h1 { text-align: center; color: #2c3e50; }
+        .card { background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        h2 { border-bottom: 2px solid #3498db; padding-bottom: 10px; color: #2980b9; margin-top: 0; }
+        
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .metric-box { background: #f8f9fa; padding: 15px; border-radius: 6px; text-align: center; border: 1px solid #e9ecef; }
+        .metric-title { font-size: 14px; color: #6c757d; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+        .metric-value { font-size: 24px; font-weight: bold; color: #2c3e50; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f8f9fa; color: #333; }
+        tr:hover { background-color: #f1f1f1; }
+        
+        .loading { color: #888; font-style: italic; text-align: center; padding: 20px; }
+        .error { color: #e74c3c; background: #fadbd8; padding: 10px; border-radius: 5px; }
     </style>
 </head>
 <body>
-
-    <h1>Portal Informasi Lingkungan Santa Anna</h1>
+<div class="container">
+    <h1>Portal Lingkungan Santa Anna</h1>
 
     <div class="card">
         <h2>Ringkasan Keuangan (Tahun Ini)</h2>
-        <div id="finance-dashboard" class="loading">Memuat data dari Google Sheet...</div>
+        <div id="finance-dashboard" class="loading">Memuat data dari sistem...</div>
     </div>
     
     <div class="card">
-        <h2>Agenda Kegiatan</h2>
+        <h2>Agenda Kegiatan Mendatang</h2>
         <div id="agenda-list" class="loading">Memuat data kegiatan...</div>
     </div>
 
-    <script>
-        // MASUKKAN URL WEB APP ANDA DI SINI
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbxbh31ipwBhgDBL6KY-057fOQGf466lwcpiNIJ0ygqbuXMzKR-tpty_qAu2UuPmrH7n/exec';
+    <div class="card">
+        <h2>Tabel Pemasukan Terakhir (Publik)</h2>
+        <div id="transaksi-list" class="loading">Memuat data transaksi...</div>
+    </div>
+</div>
 
-        // Fungsi untuk mengambil dan menampilkan Dashboard
-        async function fetchDashboard() {
-            try {
-                const response = await fetch(scriptURL + '?action=getDashboard');
-                const result = await response.json();
-                
-                if (result.status === "success") {
-                    const data = result.data;
-                    
-                    // Format angka ke Rupiah
-                    const formatRp = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka || 0);
+<script>
+    // GANTI DENGAN URL WEB APP ANDA YANG BARU (Jika berubah setelah di-deploy ulang)
+    // Berdasarkan gambar Anda, URL-nya adalah ini:
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxbh31ipwBhgDBL6KY-057fOQGf466lwcpiNIJ0ygqbuXMzKR-tpty_qAu2UuPmrH7n/exec';
 
-                    const html = `
-                        <p>Total Pemasukan: <span class="metric">${formatRp(data['Total pemasukan tahun ini'])}</span></p>
-                        <p>Total Pengeluaran: <span class="metric">${formatRp(data['Pengeluaran tahun ini'])}</span></p>
-                        <p>Jumlah KK Aktif: <strong>${data['Jumlah KK aktif']}</strong></p>
-                    `;
-                    document.getElementById('finance-dashboard').innerHTML = html;
-                }
-            } catch (error) {
-                document.getElementById('finance-dashboard').innerHTML = 'Gagal memuat data keuangan.';
-                console.error('Error fetching dashboard:', error);
+    // Format angka ke Rupiah
+    const formatRp = (angka) => {
+        if(isNaN(angka) || angka === "") return "Rp 0";
+        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+    }
+
+    async function fetchData(action, elementId, renderFunction) {
+        const element = document.getElementById(elementId);
+        try {
+            const response = await fetch(`${scriptURL}?action=${action}`);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const result = await response.json();
+            
+            if (result.status === "success") {
+                element.innerHTML = renderFunction(result.data);
+            } else {
+                element.innerHTML = `<div class="error">Error dari server: ${result.message}</div>`;
             }
+        } catch (error) {
+            element.innerHTML = `<div class="error">Gagal memuat data. Periksa koneksi internet atau URL API. Detail: ${error.message}</div>`;
+            console.error(`Error fetching ${action}:`, error);
         }
+    }
 
-        // Fungsi untuk mengambil dan menampilkan Agenda
-        async function fetchAgenda() {
-            try {
-                const response = await fetch(scriptURL + '?action=getAgenda');
-                const result = await response.json();
-                
-                if (result.status === "success") {
-                    const data = result.data;
-                    if(data.length === 0) {
-                         document.getElementById('agenda-list').innerHTML = '<p>Tidak ada kegiatan mendatang.</p>';
-                         return;
-                    }
-                    
-                    // Anda bisa mengintegrasikan DataTables di sini jika datanya banyak
-                    let html = '<ul>';
-                    data.forEach(item => {
-                        html += `<li><strong>${item['Tanggal']}</strong>: ${item['Nama / keterangan']} (${item['Status']})</li>`;
-                    });
-                    html += '</ul>';
-                    document.getElementById('agenda-list').innerHTML = html;
-                }
-            } catch (error) {
-                document.getElementById('agenda-list').innerHTML = 'Gagal memuat data agenda.';
-                console.error('Error fetching agenda:', error);
-            }
-        }
+    // Fungsi render untuk Dashboard
+    function renderDashboard(data) {
+        // Karena API sekarang mengembalikan teks seperti yang tertulis di sheet (contoh: "37" atau "Rp 120.000")
+        // Kita sesuaikan cara membacanya.
+        return `
+            <div class="dashboard-grid">
+                <div class="metric-box">
+                    <div class="metric-title">Total Pemasukan</div>
+                    <div class="metric-value">${formatRp(data['Total pemasukan tahun ini'])}</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-title">Total Pengeluaran</div>
+                    <div class="metric-value">${formatRp(data['Pengeluaran tahun ini'])}</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-title">Saldo Akhir</div>
+                    <div class="metric-value">${formatRp(data['Saldo akhir tahun*'])}</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-title">Jumlah KK Aktif</div>
+                    <div class="metric-value">${data['Jumlah KK aktif']}</div>
+                </div>
+            </div>
+        `;
+    }
 
-        // Jalankan fungsi saat halaman dimuat
-        fetchDashboard();
-        fetchAgenda();
-    </script>
+    // Fungsi render untuk Agenda
+    function renderAgenda(data) {
+        if (!data || data.length === 0) return '<p>Tidak ada kegiatan mendatang.</p>';
+        
+        let html = '<table><thead><tr><th>Tanggal</th><th>Kegiatan</th><th>Tempat</th><th>Status</th></tr></thead><tbody>';
+        data.forEach(item => {
+            html += `<tr>
+                <td>${item['Tanggal'] || '-'}</td>
+                <td><strong>${item['Nama / keterangan'] || '-'}</strong></td>
+                <td>${item['Tempat'] || '-'}</td>
+                <td><span style="background:#e8f4f8; padding:3px 8px; border-radius:12px; font-size:0.85em;">${item['Status'] || '-'}</span></td>
+            </tr>`;
+        });
+        html += '</tbody></table>';
+        return html;
+    }
+
+    // Fungsi render untuk Transaksi
+    function renderTransaksi(data) {
+        if (!data || data.length === 0) return '<p>Belum ada data transaksi.</p>';
+        
+        // Membalik urutan agar data terbaru ada di atas
+        data.reverse();
+        
+        // Tampilkan 10 data terakhir saja
+        const recentData = data.slice(0, 10);
+        
+        let html = '<table><thead><tr><th>Tanggal</th><th>Uraian</th><th>Jumlah</th></tr></thead><tbody>';
+        recentData.forEach(item => {
+            html += `<tr>
+                <td>${item['Tanggal'] || '-'}</td>
+                <td>${item['Uraian'] || '-'}</td>
+                <td>${item['Jumlah'] || '-'}</td>
+            </tr>`;
+        });
+        html += '</tbody></table>';
+        return html;
+    }
+
+    // Panggil fungsi saat halaman dimuat
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchData('getDashboard', 'finance-dashboard', renderDashboard);
+        fetchData('getAgenda', 'agenda-list', renderAgenda);
+        fetchData('getTransaksi', 'transaksi-list', renderTransaksi);
+    });
+</script>
 </body>
 </html>
