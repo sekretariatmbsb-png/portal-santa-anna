@@ -7,7 +7,7 @@
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f4f7f6; color: #333; }
         .container { max-width: 800px; margin: auto; padding: 20px; }
-        .card { background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .card { background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow-x: auto; }
         h2 { border-bottom: 2px solid #3498db; padding-bottom: 10px; color: #2980b9; margin-top: 0; font-size: 1.2em; }
         
         .header-container { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; margin-top: 10px; flex-wrap: wrap; }
@@ -17,23 +17,23 @@
         
         .btn-admin { background: #34495e; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-admin:hover { background: #2c3e50; }
-        .btn-logout { background: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; display: none; margin-bottom: 20px; }
+        .btn-logout { background: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; display: none; margin-bottom: 20px; width: 100%; }
 
         .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
         .metric-box { background: #f8f9fa; padding: 15px; border-radius: 6px; text-align: center; border: 1px solid #e9ecef; }
         .metric-title { font-size: 12px; color: #6c757d; text-transform: uppercase; margin-bottom: 5px; }
         .metric-value { font-size: 20px; font-weight: bold; color: #2c3e50; }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9em; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9em; min-width: 500px; }
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
         th { background-color: #f8f9fa; }
         
         /* Form Admin */
-        .admin-section { display: none; } /* Tersembunyi secara default */
+        .admin-section { display: none; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9em; }
         input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button[type="submit"] { width: 100%; padding: 12px; background: #2980b9; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button[type="submit"], .btn-action { width: 100%; padding: 12px; background: #2980b9; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 10px;}
         
         /* Modal PIN */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
@@ -52,7 +52,6 @@
 </head>
 <body>
 
-<!-- HEADER -->
 <div class="container">
     <div class="header-container">
         <div class="title-group">
@@ -62,7 +61,7 @@
         <button class="btn-admin" id="btnBukaAdmin" onclick="bukaModalPin()">Login Pengurus</button>
     </div>
     
-    <button class="btn-logout" id="btnKeluarAdmin" onclick="logoutAdmin()">Keluar Mode Pengurus</button>
+    <button class="btn-logout" id="btnKeluarAdmin" onclick="logoutAdmin()">🔒 Keluar dari Mode Pengurus</button>
 
     <!-- ==================== BAGIAN PUBLIK (UMAT) ==================== -->
     <div id="section-publik">
@@ -94,40 +93,83 @@
     <!-- ==================== BAGIAN ADMIN (PENGURUS) ==================== -->
     <div id="section-admin" class="admin-section">
         
-        <div class="card">
-            <h2>Input Data Pembayaran Iuran</h2>
+        <!-- Tabel Status Semua KK -->
+        <div class="card" style="border-top: 4px solid #f39c12;">
+            <h2>📋 Status Iuran Seluruh KK</h2>
+            <button class="btn-action" style="background:#f39c12;" onclick="loadSemuaKK()">Muat Daftar Seluruh KK</button>
+            <div id="tabel-semua-kk"></div>
+        </div>
+
+        <!-- Form Transaksi Lain (Kas) -->
+        <div class="card" style="border-top: 4px solid #27ae60;">
+            <h2>💰 Input Transaksi Lain (Pemasukan/Pengeluaran Non-Iuran)</h2>
+            <form id="formTransaksi">
+                <input type="hidden" name="action" value="inputTransaksiLain">
+                <div class="dashboard-grid">
+                    <div class="form-group">
+                        <label>Jenis Transaksi</label>
+                        <select name="jenisTransaksi">
+                            <option value="Pemasukan">Pemasukan Kas (Kolekte, Donasi, dll)</option>
+                            <option value="Pengeluaran">Pengeluaran Kas (Konsumsi, Operasional, dll)</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Tanggal</label><input type="date" name="tanggal" required></div>
+                </div>
+                <div class="dashboard-grid">
+                    <div class="form-group"><label>Kategori / Sumber</label><input type="text" name="kategori" placeholder="Misal: Kolekte APP, DP Bus Ziarek" required></div>
+                    <div class="form-group"><label>Nominal (Rp)</label><input type="number" name="jumlah" required></div>
+                </div>
+                <div class="form-group"><label>Uraian Detail</label><input type="text" name="uraian" placeholder="Penjelasan detail transaksi" required></div>
+                <div class="form-group"><label>Metode Pembayaran</label><select name="metode"><option>Tunai</option><option>Transfer</option></select></div>
+                
+                <button type="submit" style="background:#27ae60;">Simpan Transaksi Kas</button>
+                <div id="msgTransaksi" class="msg"></div>
+            </form>
+        </div>
+
+        <!-- Form Agenda Baru -->
+        <div class="card" style="border-top: 4px solid #8e44ad;">
+            <h2>🗓️ Tambah Agenda Kegiatan</h2>
+            <form id="formAgenda">
+                <input type="hidden" name="action" value="inputAgenda">
+                <div class="dashboard-grid">
+                    <div class="form-group"><label>Tanggal Kegiatan</label><input type="date" name="tanggal" required></div>
+                    <div class="form-group"><label>Jenis Kegiatan</label><input type="text" name="jenis" placeholder="Misal: Rapat, Doa" required></div>
+                </div>
+                <div class="form-group"><label>Nama / Keterangan</label><input type="text" name="nama" placeholder="Detail nama kegiatan" required></div>
+                <div class="dashboard-grid">
+                    <div class="form-group"><label>Tempat</label><input type="text" name="tempat" required></div>
+                    <div class="form-group"><label>Penanggung Jawab</label><input type="text" name="pj" required></div>
+                </div>
+                
+                <button type="submit" style="background:#8e44ad;">Simpan Agenda Baru</button>
+                <div id="msgAgenda" class="msg"></div>
+            </form>
+        </div>
+
+        <!-- Form Iuran Lama -->
+        <div class="card" style="border-top: 4px solid #2980b9;">
+            <h2>📝 Input Pembayaran Iuran Rutin</h2>
             <form id="formIuran">
                 <input type="hidden" name="action" value="inputIuran">
-                <div class="dashboard-grid" style="margin-bottom: 15px;">
+                <div class="dashboard-grid">
                     <div class="form-group"><label>Tanggal</label><input type="date" name="tanggal" required></div>
-                    <div class="form-group"><label>ID KK</label><input type="text" name="idKK" placeholder="Misal: P02W19..." required></div>
+                    <div class="form-group"><label>ID KK</label><input type="text" name="idKK" placeholder="P02W19..." required></div>
                     <div class="form-group">
-                        <label>Bulan Ke-</label>
-                        <select name="bulan" required>
-                            <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
-                            <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
-                            <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
-                            <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
-                        </select>
+                        <label>Bulan Ke- (1-12)</label>
+                        <input type="number" name="bulan" min="1" max="12" required>
                     </div>
                 </div>
                 <div class="dashboard-grid">
                     <div class="form-group">
-                        <label>Jenis</label>
-                        <select name="jenisIuran"><option value="Iuran lingkungan">Lingkungan</option><option value="SSYA">SSYA</option></select>
+                        <label>Jenis</label><select name="jenisIuran"><option value="Iuran lingkungan">Lingkungan</option><option value="SSYA">SSYA</option></select>
                     </div>
                     <div class="form-group"><label>Nominal (Rp)</label><input type="number" name="jumlah" required></div>
                     <div class="form-group"><label>Metode</label><select name="metode"><option>Tunai</option><option>Transfer</option></select></div>
                 </div>
-                <button type="submit">Simpan Iuran</button>
+                <button type="submit">Simpan Iuran Rutin</button>
                 <div id="msgIuran" class="msg"></div>
             </form>
-        </div>
-
-        <div class="card">
-            <h2>Riwayat Input Terakhir (Rekap Kas)</h2>
-            <button onclick="loadRekapAdmin()" style="margin-bottom: 10px; background: #95a5a6; padding: 5px 10px; border:none; color:white; border-radius:3px;">Segarkan Tabel</button>
-            <div id="tabel-rekap-admin" class="loading">Klik tombol di atas untuk memuat histori transaksi...</div>
         </div>
         
     </div>
@@ -147,10 +189,7 @@
 </div>
 
 <script>
-    // URL WEB APP APPS SCRIPT ANDA
     const scriptURL = 'https://script.google.com/macros/s/AKfycbxbh31ipwBhgDBL6KY-057fOQGf466lwcpiNIJ0ygqbuXMzKR-tpty_qAu2UuPmrH7n/exec';
-    
-    // UBAH PIN INI SESUAI KEINGINAN
     const PIN_ADMIN = "261011"; 
 
     const formatRp = (angka) => {
@@ -166,9 +205,7 @@
         document.getElementById('inputPin').focus();
     }
     
-    function tutupModalPin() {
-        document.getElementById('modalPin').style.display = 'none';
-    }
+    function tutupModalPin() { document.getElementById('modalPin').style.display = 'none'; }
 
     function verifikasiPin() {
         if(document.getElementById('inputPin').value === PIN_ADMIN) {
@@ -177,7 +214,6 @@
             document.getElementById('section-admin').style.display = 'block';
             document.getElementById('btnBukaAdmin').style.display = 'none';
             document.getElementById('btnKeluarAdmin').style.display = 'block';
-            loadRekapAdmin(); // Langsung muat data admin
         } else {
             document.getElementById('pesanPin').style.display = 'block';
         }
@@ -188,6 +224,8 @@
         document.getElementById('section-publik').style.display = 'block';
         document.getElementById('btnKeluarAdmin').style.display = 'none';
         document.getElementById('btnBukaAdmin').style.display = 'block';
+        // Bersihkan tabel saat logout agar ringan
+        document.getElementById('tabel-semua-kk').innerHTML = "";
     }
 
     // --- FUNGSI AMBIL DATA (GET) ---
@@ -197,15 +235,12 @@
             const response = await fetch(`${scriptURL}?action=${action}`);
             const result = await response.json();
             element.innerHTML = result.status === "success" ? renderFunction(result.data) : `<p style="color:red">Error: ${result.message}</p>`;
-        } catch (error) {
-            element.innerHTML = `<p style="color:red">Gagal memuat data.</p>`;
-        }
+        } catch (error) { element.innerHTML = `<p style="color:red">Gagal memuat data.</p>`; }
     }
 
     function renderDashboard(data) {
         return `<div class="dashboard-grid">
-            <div class="metric-box"><div class="metric-title">Total Pemasukan</div><div class="metric-value">${formatRp(data['Total pemasukan tahun ini'])}</div></div>
-            <div class="metric-box"><div class="metric-title">Saldo Akhir</div><div class="metric-value">${formatRp(data['Saldo akhir tahun*'])}</div></div>
+            <div class="metric-box"><div class="metric-title">Total Pemasukan Iuran</div><div class="metric-value">${formatRp(data['Total pemasukan tahun ini'])}</div></div>
             <div class="metric-box"><div class="metric-title">Jumlah KK Aktif</div><div class="metric-value">${data['Jumlah KK aktif']}</div></div>
         </div>`;
     }
@@ -228,7 +263,6 @@
         const keyword = document.getElementById('keyword').value.trim();
         const hasilDiv = document.getElementById('hasil-pencarian');
         if (!keyword) { hasilDiv.innerHTML = '<p style="color:red">Ketik nama KK dulu.</p>'; return; }
-        
         hasilDiv.innerHTML = '<p class="loading">Mencari...</p>';
         try {
             const response = await fetch(`${scriptURL}?action=cekIuran&keyword=${encodeURIComponent(keyword)}`);
@@ -237,40 +271,40 @@
                 let html = '<table><tr><th>Nama</th><th>Jenis</th><th>Dibayar</th><th>Sisa Tagihan</th></tr>';
                 result.data.forEach(item => {
                     const lunas = (item['Sisa Tagihan'] === "Rp 0" || item['Sisa Tagihan'] === "0");
-                    html += `<tr><td>${item['Nama']}</td><td>${item['Jenis Iuran']}</td><td>${item['Total Dibayar']}</td><td class="${lunas?'status-lunas':'status-tunggak'}">${item['Sisa Tagihan']}</td></tr>`;
+                    html += `<tr><td>${item['Nama']}</td><td>${item['Jenis']}</td><td>${item['Total Dibayar']}</td><td class="${lunas?'status-lunas':'status-tunggak'}">${item['Sisa Tagihan']}</td></tr>`;
                 });
                 hasilDiv.innerHTML = html + '</table>';
-            } else {
-                hasilDiv.innerHTML = '<p>Data tidak ditemukan.</p>';
-            }
+            } else { hasilDiv.innerHTML = '<p>Data tidak ditemukan.</p>'; }
         } catch (e) { hasilDiv.innerHTML = '<p style="color:red">Pencarian gagal.</p>'; }
     }
 
     // --- FUNGSI KHUSUS ADMIN ---
-    async function loadRekapAdmin() {
-        const div = document.getElementById('tabel-rekap-admin');
-        div.innerHTML = '<p class="loading">Memuat riwayat transaksi dari sheet Pembayaran...</p>';
+    async function loadSemuaKK() {
+        const div = document.getElementById('tabel-semua-kk');
+        div.innerHTML = '<p class="loading">Mengunduh daftar semua KK dari database... Mohon tunggu.</p>';
         try {
-            const response = await fetch(`${scriptURL}?action=getRekapAdmin`);
+            const response = await fetch(`${scriptURL}?action=getAllKKStatus`);
             const result = await response.json();
             if (result.status === "success" && result.data.length > 0) {
-                let html = '<table><tr><th>Tanggal</th><th>Bulan Ke</th><th>ID KK</th><th>Jenis</th><th>Nominal</th></tr>';
-                // Tampilkan maksimal 20 data terakhir agar tidak terlalu panjang
-                result.data.slice(0, 20).forEach(item => {
-                    html += `<tr><td>${item['Tanggal']||'-'}</td><td>Bulan ${item['Bulan']||'-'}</td><td>${item['ID_KK']||'-'}</td><td>${item['Jenis']||'-'}</td><td>${item['Nominal']||'-'}</td></tr>`;
+                let html = '<table style="margin-top:15px;"><tr><th>Nama KK</th><th>Jenis</th><th>Total Dibayar</th><th>Sisa Tagihan</th></tr>';
+                result.data.forEach(item => {
+                    const lunas = (item['Sisa Tagihan'] === "Rp 0" || item['Sisa Tagihan'] === "0");
+                    html += `<tr><td>${item['Nama']}</td><td>${item['Jenis']}</td><td>${item['Total Dibayar']}</td><td class="${lunas?'status-lunas':'status-tunggak'}">${item['Sisa Tagihan']}</td></tr>`;
                 });
                 div.innerHTML = html + '</table>';
-            } else { div.innerHTML = '<p>Belum ada riwayat tercatat di sheet Pembayaran.</p>'; }
-        } catch(e) { div.innerHTML = '<p style="color:red">Gagal memuat rekap.</p>'; }
+            } else { div.innerHTML = '<p>Daftar KK kosong.</p>'; }
+        } catch(e) { div.innerHTML = '<p style="color:red">Gagal memuat daftar KK.</p>'; }
     }
 
-    document.getElementById('formIuran').addEventListener('submit', async (e) => {
+    // Fungsi Pengiriman Form Universal
+    async function submitForm(e, formId, msgId) {
         e.preventDefault();
-        const form = e.target;
-        const btn = form.querySelector('button');
-        const msg = document.getElementById('msgIuran');
+        const form = document.getElementById(formId);
+        const btn = form.querySelector('button[type="submit"]');
+        const msg = document.getElementById(msgId);
+        const textAwal = btn.innerText;
         
-        btn.innerText = "Menyimpan..."; btn.disabled = true; msg.style.display = 'none';
+        btn.innerText = "Menyimpan ke Google Sheet..."; btn.disabled = true; msg.style.display = 'none';
         
         try {
             const response = await fetch(scriptURL, { method: 'POST', body: new FormData(form) });
@@ -278,17 +312,20 @@
             msg.style.display = 'block';
             if (result.status === "success") {
                 msg.innerHTML = `<span style="color:green">✅ ${result.message}</span>`;
-                form.reset();
-                loadRekapAdmin(); // Langsung perbarui tabel admin
+                form.reset(); // Kosongkan form setelah sukses
             } else {
                 msg.innerHTML = `<span style="color:red">❌ Gagal: ${result.message}</span>`;
             }
         } catch(err) {
-            msg.style.display = 'block'; msg.innerHTML = `<span style="color:red">❌ Kesalahan jaringan.</span>`;
+            msg.style.display = 'block'; msg.innerHTML = `<span style="color:red">❌ Kesalahan jaringan. Coba lagi.</span>`;
         } finally {
-            btn.innerText = "Simpan Iuran"; btn.disabled = false;
+            btn.innerText = textAwal; btn.disabled = false;
         }
-    });
+    }
+
+    document.getElementById('formIuran').addEventListener('submit', (e) => submitForm(e, 'formIuran', 'msgIuran'));
+    document.getElementById('formTransaksi').addEventListener('submit', (e) => submitForm(e, 'formTransaksi', 'msgTransaksi'));
+    document.getElementById('formAgenda').addEventListener('submit', (e) => submitForm(e, 'formAgenda', 'msgAgenda'));
 
     // Inisialisasi data publik saat halaman dimuat
     document.addEventListener('DOMContentLoaded', () => {
