@@ -127,6 +127,20 @@
             </form>
         </div>
 
+        <!-- Fitur Cetak Laporan PDF -->
+        <div class="card" style="border-top: 4px solid #e74c3c;">
+            <h2>📄 Buat Laporan Arus Kas (PDF)</h2>
+            <form id="formCetakPdf">
+                <input type="hidden" name="action" value="cetakLaporanPDF">
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <label>Pilih Bulan Laporan:</label>
+                    <input type="month" name="bulanLaporan" required style="max-width: 200px;">
+                    <button type="submit" style="background:#e74c3c; width:auto;">Buat & Unduh PDF</button>
+                </div>
+                <div id="msgPdf" class="msg"></div>
+            </form>
+        </div>
+
         <!-- Form Agenda Baru -->
         <div class="card" style="border-top: 4px solid #8e44ad;">
             <h2>🗓️ Tambah Agenda Kegiatan</h2>
@@ -239,11 +253,13 @@
     }
 
     function renderDashboard(data) {
-        return `<div class="dashboard-grid">
-            <div class="metric-box"><div class="metric-title">Total Pemasukan Iuran</div><div class="metric-value">${formatRp(data['Total pemasukan tahun ini'])}</div></div>
-            <div class="metric-box"><div class="metric-title">Jumlah KK Aktif</div><div class="metric-value">${data['Jumlah KK aktif']}</div></div>
-        </div>`;
-    }
+    return `<div class="dashboard-grid">
+        <div class="metric-box"><div class="metric-title">Jumlah KK Aktif</div><div class="metric-value">${data['Jumlah KK aktif']}</div></div>
+        <div class="metric-box"><div class="metric-title">Total Pemasukan</div><div class="metric-value">${formatRp(data['Total pemasukan tahun ini'])}</div></div>
+        <div class="metric-box"><div class="metric-title">Total Pengeluaran</div><div class="metric-value">${formatRp(data['Pengeluaran tahun ini'])}</div></div>
+        <div class="metric-box"><div class="metric-title">Saldo Akhir</div><div class="metric-value">${formatRp(data['Saldo akhir tahun*'])}</div></div>
+    </div>`;
+}
 
     function renderBulanan(data) {
         if (!data || data.length === 0) return '<p>Belum ada data.</p>';
@@ -326,6 +342,29 @@
     document.getElementById('formIuran').addEventListener('submit', (e) => submitForm(e, 'formIuran', 'msgIuran'));
     document.getElementById('formTransaksi').addEventListener('submit', (e) => submitForm(e, 'formTransaksi', 'msgTransaksi'));
     document.getElementById('formAgenda').addEventListener('submit', (e) => submitForm(e, 'formAgenda', 'msgAgenda'));
+    document.getElementById('formCetakPdf').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const btn = form.querySelector('button');
+        const msg = document.getElementById('msgPdf');
+        
+        btn.innerText = "Membuat PDF..."; btn.disabled = true; msg.style.display = 'none';
+        
+        try {
+            const response = await fetch(scriptURL, { method: 'POST', body: new FormData(form) });
+            const result = await response.json();
+            msg.style.display = 'block';
+            if (result.status === "success") {
+                msg.innerHTML = `<span style="color:green">✅ ${result.message} <br> <a href="${result.url}" target="_blank" style="display:inline-block; margin-top:10px; background:#27ae60; color:white; padding:8px 15px; text-decoration:none; border-radius:4px;">Klik untuk Mengunduh PDF</a></span>`;
+            } else {
+                msg.innerHTML = `<span style="color:red">❌ Gagal: ${result.message}</span>`;
+            }
+        } catch(err) {
+            msg.style.display = 'block'; msg.innerHTML = `<span style="color:red">❌ Kesalahan jaringan saat membuat PDF.</span>`;
+        } finally {
+            btn.innerText = "Buat & Unduh PDF"; btn.disabled = false;
+        }
+    });
 
     // Inisialisasi data publik saat halaman dimuat
     document.addEventListener('DOMContentLoaded', () => {
