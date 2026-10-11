@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Lingkungan Santa Anna</title>
+    <!-- Tambahkan CSS framework jika perlu (misal Bootstrap/Tailwind) -->
+    <style>
+        body { font-family: sans-serif; margin: 20px; line-height: 1.6; }
+        .card { border: 1px solid #ddd; padding: 15px; border-radius: 5px; margin-bottom: 20px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); }
+        .metric { font-size: 24px; font-weight: bold; color: #2c3e50; }
+        .loading { color: #666; font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <h1>Portal Informasi Lingkungan Santa Anna</h1>
+
+    <div class="card">
+        <h2>Ringkasan Keuangan (Tahun Ini)</h2>
+        <div id="finance-dashboard" class="loading">Memuat data dari Google Sheet...</div>
+    </div>
+    
+    <div class="card">
+        <h2>Agenda Kegiatan</h2>
+        <div id="agenda-list" class="loading">Memuat data kegiatan...</div>
+    </div>
+
+    <script>
+        // MASUKKAN URL WEB APP ANDA DI SINI
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbxbh31ipwBhgDBL6KY-057fOQGf466lwcpiNIJ0ygqbuXMzKR-tpty_qAu2UuPmrH7n/exec';
+
+        // Fungsi untuk mengambil dan menampilkan Dashboard
+        async function fetchDashboard() {
+            try {
+                const response = await fetch(scriptURL + '?action=getDashboard');
+                const result = await response.json();
+                
+                if (result.status === "success") {
+                    const data = result.data;
+                    
+                    // Format angka ke Rupiah
+                    const formatRp = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka || 0);
+
+                    const html = `
+                        <p>Total Pemasukan: <span class="metric">${formatRp(data['Total pemasukan tahun ini'])}</span></p>
+                        <p>Total Pengeluaran: <span class="metric">${formatRp(data['Pengeluaran tahun ini'])}</span></p>
+                        <p>Jumlah KK Aktif: <strong>${data['Jumlah KK aktif']}</strong></p>
+                    `;
+                    document.getElementById('finance-dashboard').innerHTML = html;
+                }
+            } catch (error) {
+                document.getElementById('finance-dashboard').innerHTML = 'Gagal memuat data keuangan.';
+                console.error('Error fetching dashboard:', error);
+            }
+        }
+
+        // Fungsi untuk mengambil dan menampilkan Agenda
+        async function fetchAgenda() {
+            try {
+                const response = await fetch(scriptURL + '?action=getAgenda');
+                const result = await response.json();
+                
+                if (result.status === "success") {
+                    const data = result.data;
+                    if(data.length === 0) {
+                         document.getElementById('agenda-list').innerHTML = '<p>Tidak ada kegiatan mendatang.</p>';
+                         return;
+                    }
+                    
+                    // Anda bisa mengintegrasikan DataTables di sini jika datanya banyak
+                    let html = '<ul>';
+                    data.forEach(item => {
+                        html += `<li><strong>${item['Tanggal']}</strong>: ${item['Nama / keterangan']} (${item['Status']})</li>`;
+                    });
+                    html += '</ul>';
+                    document.getElementById('agenda-list').innerHTML = html;
+                }
+            } catch (error) {
+                document.getElementById('agenda-list').innerHTML = 'Gagal memuat data agenda.';
+                console.error('Error fetching agenda:', error);
+            }
+        }
+
+        // Jalankan fungsi saat halaman dimuat
+        fetchDashboard();
+        fetchAgenda();
+    </script>
+</body>
+</html>
