@@ -5,6 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal Lingkungan Santa Anna</title>
     <style>
+        .header-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    margin-top: 10px;
+}
+.logo-lingkungan {
+    max-height: 60px; /* Ubah angka ini jika logo terlalu besar/kecil */
+    width: auto;
+}
+/* Hapus text-align: center dari h1 yang lama jika ada, karena sudah diatur oleh flexbox di atas */
+h1 { margin: 0; color: #2c3e50; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f4f7f6; color: #333; }
         .container { max-width: 800px; margin: auto; }
         h1 { text-align: center; color: #2c3e50; }
@@ -35,7 +49,10 @@
 </head>
 <body>
 <div class="container">
+    <div class="header-container">
+    <img src="logo.png" alt="Logo Lingkungan" class="logo-lingkungan">
     <h1>Portal Lingkungan Santa Anna</h1>
+</div>
 
     <!-- 1. Cek Status Iuran -->
     <div class="card">
