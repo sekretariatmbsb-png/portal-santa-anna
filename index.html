@@ -4,54 +4,73 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal Lingkungan Santa Anna</title>
-    <!-- Tambahkan CSS untuk tampilan yang lebih rapi -->
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f4f7f6; color: #333; }
         .container { max-width: 800px; margin: auto; }
         h1 { text-align: center; color: #2c3e50; }
         .card { background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        h2 { border-bottom: 2px solid #3498db; padding-bottom: 10px; color: #2980b9; margin-top: 0; }
+        h2 { border-bottom: 2px solid #3498db; padding-bottom: 10px; color: #2980b9; margin-top: 0; font-size: 1.2em; }
         
         .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
         .metric-box { background: #f8f9fa; padding: 15px; border-radius: 6px; text-align: center; border: 1px solid #e9ecef; }
         .metric-title { font-size: 14px; color: #6c757d; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
         .metric-value { font-size: 24px; font-weight: bold; color: #2c3e50; }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9em; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
         th { background-color: #f8f9fa; color: #333; }
         tr:hover { background-color: #f1f1f1; }
         
         .loading { color: #888; font-style: italic; text-align: center; padding: 20px; }
-        .error { color: #e74c3c; background: #fadbd8; padding: 10px; border-radius: 5px; }
+        .error { color: #e74c3c; background: #fadbd8; padding: 10px; border-radius: 5px; text-align: center; }
+        
+        /* Gaya untuk form pencarian */
+        .search-container { display: flex; gap: 10px; margin-bottom: 15px; }
+        .search-container input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; }
+        .search-container button { padding: 10px 20px; background: #2980b9; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .search-container button:hover { background: #1a5276; }
+        .status-lunas { color: #27ae60; font-weight: bold; }
+        .status-tunggak { color: #e74c3c; font-weight: bold; }
     </style>
 </head>
 <body>
 <div class="container">
     <h1>Portal Lingkungan Santa Anna</h1>
 
+    <!-- 1. Cek Status Iuran -->
+    <div class="card">
+        <h2>Cek Status Iuran Keluarga</h2>
+        <p style="font-size: 0.9em; color: #666;">Masukkan nama KK (atau sebagian nama) untuk mengecek sisa tagihan iuran Anda.</p>
+        <div class="search-container">
+            <input type="text" id="keyword" placeholder="Contoh: Adrianus..." onkeypress="handleEnter(event)">
+            <button onclick="cariIuran()" id="btnCari">Cari Data</button>
+        </div>
+        <div id="hasil-pencarian"></div>
+    </div>
+
+    <!-- 2. Ringkasan Keuangan Utama -->
     <div class="card">
         <h2>Ringkasan Keuangan (Tahun Ini)</h2>
         <div id="finance-dashboard" class="loading">Memuat data dari sistem...</div>
     </div>
     
+    <!-- 3. Laporan Kas Bulanan -->
+    <div class="card">
+        <h2>Laporan Pemasukan Iuran Bulanan</h2>
+        <div id="laporan-bulanan" class="loading">Memuat laporan bulanan...</div>
+    </div>
+
+    <!-- 4. Agenda -->
     <div class="card">
         <h2>Agenda Kegiatan Mendatang</h2>
         <div id="agenda-list" class="loading">Memuat data kegiatan...</div>
     </div>
-
-    <div class="card">
-        <h2>Tabel Pemasukan Terakhir (Publik)</h2>
-        <div id="transaksi-list" class="loading">Memuat data transaksi...</div>
-    </div>
 </div>
 
 <script>
-    // GANTI DENGAN URL WEB APP ANDA YANG BARU (Jika berubah setelah di-deploy ulang)
-    // Berdasarkan gambar Anda, URL-nya adalah ini:
+    // URL WEB APP ANDA
     const scriptURL = 'https://script.google.com/macros/s/AKfycbxbh31ipwBhgDBL6KY-057fOQGf466lwcpiNIJ0ygqbuXMzKR-tpty_qAu2UuPmrH7n/exec';
 
-    // Format angka ke Rupiah
     const formatRp = (angka) => {
         if(isNaN(angka) || angka === "") return "Rp 0";
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
@@ -70,15 +89,11 @@
                 element.innerHTML = `<div class="error">Error dari server: ${result.message}</div>`;
             }
         } catch (error) {
-            element.innerHTML = `<div class="error">Gagal memuat data. Periksa koneksi internet atau URL API. Detail: ${error.message}</div>`;
-            console.error(`Error fetching ${action}:`, error);
+            element.innerHTML = `<div class="error">Gagal memuat data. Periksa koneksi.</div>`;
         }
     }
 
-    // Fungsi render untuk Dashboard
     function renderDashboard(data) {
-        // Karena API sekarang mengembalikan teks seperti yang tertulis di sheet (contoh: "37" atau "Rp 120.000")
-        // Kita sesuaikan cara membacanya.
         return `
             <div class="dashboard-grid">
                 <div class="metric-box">
@@ -101,10 +116,21 @@
         `;
     }
 
-    // Fungsi render untuk Agenda
+    function renderBulanan(data) {
+        if (!data || data.length === 0) return '<p>Belum ada data pemasukan bulanan.</p>';
+        let html = '<table><thead><tr><th>Bulan</th><th>Total Iuran Diterima</th></tr></thead><tbody>';
+        data.forEach(item => {
+            html += `<tr>
+                <td><strong>${item['Bulan']}</strong></td>
+                <td>${formatRp(item['Total Iuran'])}</td>
+            </tr>`;
+        });
+        html += '</tbody></table>';
+        return html;
+    }
+
     function renderAgenda(data) {
         if (!data || data.length === 0) return '<p>Tidak ada kegiatan mendatang.</p>';
-        
         let html = '<table><thead><tr><th>Tanggal</th><th>Kegiatan</th><th>Tempat</th><th>Status</th></tr></thead><tbody>';
         data.forEach(item => {
             html += `<tr>
@@ -118,33 +144,61 @@
         return html;
     }
 
-    // Fungsi render untuk Transaksi
-    function renderTransaksi(data) {
-        if (!data || data.length === 0) return '<p>Belum ada data transaksi.</p>';
+    // Fungsi Pencarian Iuran
+    async function cariIuran() {
+        const keyword = document.getElementById('keyword').value.trim();
+        const hasilDiv = document.getElementById('hasil-pencarian');
+        const btn = document.getElementById('btnCari');
         
-        // Membalik urutan agar data terbaru ada di atas
-        data.reverse();
+        if (!keyword) {
+            hasilDiv.innerHTML = '<div class="error">Silakan masukkan nama KK terlebih dahulu.</div>';
+            return;
+        }
         
-        // Tampilkan 10 data terakhir saja
-        const recentData = data.slice(0, 10);
+        hasilDiv.innerHTML = '<p class="loading">Mencari data...</p>';
+        btn.disabled = true;
+        btn.innerText = 'Mencari...';
         
-        let html = '<table><thead><tr><th>Tanggal</th><th>Uraian</th><th>Jumlah</th></tr></thead><tbody>';
-        recentData.forEach(item => {
-            html += `<tr>
-                <td>${item['Tanggal'] || '-'}</td>
-                <td>${item['Uraian'] || '-'}</td>
-                <td>${item['Jumlah'] || '-'}</td>
-            </tr>`;
-        });
-        html += '</tbody></table>';
-        return html;
+        try {
+            const response = await fetch(`${scriptURL}?action=cekIuran&keyword=${encodeURIComponent(keyword)}`);
+            const result = await response.json();
+            
+            if (result.status === "success" && result.data.length > 0) {
+                let html = '<table><thead><tr><th>Nama</th><th>Jenis Iuran</th><th>Sudah Dibayar</th><th>Sisa Tagihan</th></tr></thead><tbody>';
+                result.data.forEach(item => {
+                    // Cek apakah tagihan lunas
+                    const lunas = item['Sisa Tagihan'] === "Rp 0" || item['Sisa Tagihan'] === "0";
+                    const statusClass = lunas ? "status-lunas" : "status-tunggak";
+                    
+                    html += `<tr>
+                        <td>${item['Nama']}</td>
+                        <td>${item['Jenis Iuran']}</td>
+                        <td>${item['Total Dibayar']}</td>
+                        <td class="${statusClass}">${item['Sisa Tagihan']}</td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+                hasilDiv.innerHTML = html;
+            } else {
+                hasilDiv.innerHTML = '<p>Data tidak ditemukan. Coba ketik sebagian nama saja (misal: "Anton").</p>';
+            }
+        } catch (error) {
+            hasilDiv.innerHTML = '<div class="error">Pencarian gagal. Periksa koneksi Anda.</div>';
+        } finally {
+            btn.disabled = false;
+            btn.innerText = 'Cari Data';
+        }
     }
 
-    // Panggil fungsi saat halaman dimuat
+    function handleEnter(e) {
+        if (e.key === 'Enter') cariIuran();
+    }
+
+    // Load data otomatis saat halaman dibuka
     document.addEventListener('DOMContentLoaded', () => {
         fetchData('getDashboard', 'finance-dashboard', renderDashboard);
+        fetchData('getLaporanBulanan', 'laporan-bulanan', renderBulanan);
         fetchData('getAgenda', 'agenda-list', renderAgenda);
-        fetchData('getTransaksi', 'transaksi-list', renderTransaksi);
     });
 </script>
 </body>
