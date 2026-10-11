@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Lingkungan Santa Anna</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f4f7f6; color: #333; }
+        .container { max-width: 600px; margin: 30px auto; padding: 20px; }
+        .card { background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        h1, h2 { color: #2c3e50; text-align: center; }
+        h2 { border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-top: 0; font-size: 1.2em; text-align: left; }
+        
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9em; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #2980b9; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 1em; margin-top: 10px; }
+        button:hover { background: #1a5276; }
+        
+        .message { margin-top: 15px; text-align: center; font-weight: bold; padding: 10px; border-radius: 4px; display: none; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+
+        /* Layar PIN */
+        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #login-card { background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 300px; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <!-- Layar Login -->
+    <div id="login-screen">
+        <div id="login-card">
+            <h2 style="text-align: center; border: none;">Login Pengurus</h2>
+            <div class="form-group">
+                <input type="password" id="pinInput" placeholder="Masukkan PIN Pengurus">
+            </div>
+            <button onclick="checkPin()">Masuk</button>
+            <p id="login-error" style="color: red; font-size: 0.9em; display: none;">PIN Salah!</p>
+        </div>
+    </div>
+
+    <!-- Konten Admin -->
+    <div class="container" id="admin-content" style="display: none;">
+        <h1>Dashboard Pengurus</h1>
+
+        <div class="card">
+            <h2>Input Pembayaran Iuran</h2>
+            <form id="formIuran">
+                <input type="hidden" name="action" value="inputIuran">
+                <div class="form-group">
+                    <label>Tanggal Bayar</label>
+                    <input type="date" name="tanggal" required>
+                </div>
+                <div class="form-group">
+                    <label>ID KK (Contoh: P02W19-01-094)</label>
+                    <input type="text" name="idKK" placeholder="ID KK Lengkap" required>
+                </div>
+                <div class="form-group">
+                    <label>Jenis Iuran</label>
+                    <select name="jenisIuran" required>
+                        <option value="Iuran lingkungan">Iuran Lingkungan</option>
+                        <option value="SSYA">SSYA (Dana Kematian)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Pembayaran Untuk Bulan Ke- (1-12)</label>
+                    <input type="number" name="bulan" min="1" max="12" placeholder="Contoh: 10 untuk Oktober" required>
+                </div>
+                <div class="form-group">
+                    <label>Jumlah Dibayar (Rp)</label>
+                    <input type="number" name="jumlah" placeholder="Hanya angka, contoh: 10000" required>
+                </div>
+                <div class="form-group">
+                    <label>Metode Pembayaran</label>
+                    <select name="metode" required>
+                        <option value="Tunai">Tunai</option>
+                        <option value="Transfer">Transfer</option>
+                    </select>
+                </div>
+                <button type="submit" id="btnIuran">Simpan Data Iuran</button>
+                <div id="msgIuran" class="message"></div>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>Tambah Agenda Kegiatan</h2>
+            <form id="formAgenda">
+                <input type="hidden" name="action" value="inputAgenda">
+                <div class="form-group">
+                    <label>Tanggal Kegiatan</label>
+                    <input type="date" name="tanggal" required>
+                </div>
+                <div class="form-group">
+                    <label>Jenis Kegiatan</label>
+                    <input type="text" name="jenis" placeholder="Contoh: Rapat, Doa Lingkungan, dll" required>
+                </div>
+                <div class="form-group">
+                    <label>Nama / Keterangan</label>
+                    <input type="text" name="nama" placeholder="Contoh: Doa Rosario Bersama" required>
+                </div>
+                <div class="form-group">
+                    <label>Tempat</label>
+                    <input type="text" name="tempat" placeholder="Lokasi kegiatan" required>
+                </div>
+                <div class="form-group">
+                    <label>Penanggung Jawab</label>
+                    <input type="text" name="pj" placeholder="Nama koordinator" required>
+                </div>
+                <button type="submit" id="btnAgenda">Simpan Agenda</button>
+                <div id="msgAgenda" class="message"></div>
+            </form>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="index.html" style="color: #2980b9; text-decoration: none;">&larr; Kembali ke Portal Publik</a>
+        </div>
+    </div>
+
+    <script>
+        // URL WEB APP ANDA
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbxbh31ipwBhgDBL6KY-057fOQGf466lwcpiNIJ0ygqbuXMzKR-tpty_qAu2UuPmrH7n/exec';
+
+        // Ganti PIN di bawah ini sesuai kesepakatan pengurus
+        const PIN_RAHASIA = "anna2026"; 
+
+        function checkPin() {
+            const input = document.getElementById('pinInput').value;
+            if (input === PIN_RAHASIA) {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('admin-content').style.display = 'block';
+            } else {
+                document.getElementById('login-error').style.display = 'block';
+            }
+        }
+
+        // Tangani enter saat mengetik PIN
+        document.getElementById('pinInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') checkPin();
+        });
+
+        // Fungsi Universal untuk mengirim form
+        async function submitForm(e, formId, btnId, msgId) {
+            e.preventDefault();
+            const form = document.getElementById(formId);
+            const btn = document.getElementById(btnId);
+            const msg = document.getElementById(msgId);
+            
+            btn.innerText = "Menyimpan...";
+            btn.disabled = true;
+            msg.style.display = 'none';
+            msg.className = 'message';
+
+            try {
+                const response = await fetch(scriptURL, { 
+                    method: 'POST', 
+                    body: new FormData(form) // Mengirim seluruh input yang ada atribut 'name'-nya
+                });
+                const result = await response.json();
+                
+                msg.style.display = 'block';
+                if (result.status === "success") {
+                    msg.classList.add('success');
+                    msg.innerText = result.message;
+                    form.reset(); // Kosongkan form setelah sukses
+                } else {
+                    msg.classList.add('error');
+                    msg.innerText = "Gagal: " + result.message;
+                }
+            } catch (error) {
+                msg.style.display = 'block';
+                msg.classList.add('error');
+                msg.innerText = "Terjadi kesalahan koneksi jaringan.";
+            } finally {
+                btn.innerText = "Simpan Data";
+                btn.disabled = false;
+                // Hilangkan pesan setelah 4 detik
+                setTimeout(() => { msg.style.display = 'none'; }, 4000);
+            }
+        }
+
+        document.getElementById('formIuran').addEventListener('submit', (e) => submitForm(e, 'formIuran', 'btnIuran', 'msgIuran'));
+        document.getElementById('formAgenda').addEventListener('submit', (e) => submitForm(e, 'formAgenda', 'btnAgenda', 'msgAgenda'));
+    </script>
+</body>
+</html>
