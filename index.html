@@ -324,7 +324,9 @@
         btn.innerText = "Menyimpan ke Google Sheet..."; btn.disabled = true; msg.style.display = 'none';
         
         try {
-            const response = await fetch(scriptURL, { method: 'POST', body: new FormData(form) });
+            const formData = new FormData(form);
+            formData.append('pinServer', document.getElementById('inputPin').value);
+            const response = await fetch(scriptURL, { method: 'POST', body: formData });
             const result = await response.json();
             msg.style.display = 'block';
             if (result.status === "success") {
