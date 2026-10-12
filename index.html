@@ -325,7 +325,7 @@
         
         try {
             const formData = new FormData(form);
-            formData.append('pinServer', document.getElementById('inputPin').value);
+            formData.append('pinServer', PIN_ADMIN);
             const response = await fetch(scriptURL, { method: 'POST', body: formData });
             const result = await response.json();
             msg.style.display = 'block';
