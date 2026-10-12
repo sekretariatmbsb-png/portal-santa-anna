@@ -354,7 +354,10 @@
         btn.innerText = "Membuat PDF..."; btn.disabled = true; msg.style.display = 'none';
         
         try {
-            const response = await fetch(scriptURL, { method: 'POST', body: new FormData(form) });
+            const formData = new FormData(form);
+            formData.append('pinServer', PIN_ADMIN); // Menyisipkan PIN ke form PDF
+            
+            const response = await fetch(scriptURL, { method: 'POST', body: formData });
             const result = await response.json();
             msg.style.display = 'block';
             if (result.status === "success") {
