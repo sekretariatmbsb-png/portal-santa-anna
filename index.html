@@ -93,14 +93,39 @@
     <!-- ==================== BAGIAN ADMIN (PENGURUS) ==================== -->
     <div id="section-admin" class="admin-section">
         
-        <!-- Tabel Status Semua KK -->
+        <!-- 1. Tabel Status Semua KK -->
         <div class="card" style="border-top: 4px solid #f39c12;">
             <h2>📋 Status Iuran Seluruh KK</h2>
             <button class="btn-action" style="background:#f39c12;" onclick="loadSemuaKK()">Muat Daftar Seluruh KK</button>
             <div id="tabel-semua-kk"></div>
         </div>
 
-        <!-- Form Transaksi Lain (Kas) -->
+        <!-- 2. Form Iuran Rutin -->
+        <div class="card" style="border-top: 4px solid #2980b9;">
+            <h2>📝 Input Pembayaran Iuran Rutin</h2>
+            <form id="formIuran">
+                <input type="hidden" name="action" value="inputIuran">
+                <div class="dashboard-grid">
+                    <div class="form-group"><label>Tanggal</label><input type="date" name="tanggal" required></div>
+                    <div class="form-group"><label>ID KK</label><input type="text" name="idKK" placeholder="P02W19..." required></div>
+                    <div class="form-group">
+                        <label>Bulan Ke- (1-12)</label>
+                        <input type="number" name="bulan" min="1" max="12" required>
+                    </div>
+                </div>
+                <div class="dashboard-grid">
+                    <div class="form-group">
+                        <label>Jenis</label><select name="jenisIuran"><option value="Iuran lingkungan">Lingkungan</option><option value="SSYA">SSYA</option></select>
+                    </div>
+                    <div class="form-group"><label>Nominal (Rp)</label><input type="number" name="jumlah" required></div>
+                    <div class="form-group"><label>Metode</label><select name="metode"><option>Tunai</option><option>Transfer</option></select></div>
+                </div>
+                <button type="submit">Simpan Iuran Rutin</button>
+                <div id="msgIuran" class="msg"></div>
+            </form>
+        </div>
+
+        <!-- 3. Form Transaksi Lain (Kas) -->
         <div class="card" style="border-top: 4px solid #27ae60;">
             <h2>💰 Input Transaksi Lain (Pemasukan/Pengeluaran Non-Iuran)</h2>
             <form id="formTransaksi">
@@ -127,7 +152,7 @@
             </form>
         </div>
 
-        <!-- Fitur Cetak Laporan PDF -->
+        <!-- 4. Cetak Laporan PDF -->
         <div class="card" style="border-top: 4px solid #e74c3c;">
             <h2>📄 Buat Laporan Arus Kas (PDF)</h2>
             <form id="formCetakPdf">
@@ -141,7 +166,7 @@
             </form>
         </div>
 
-        <!-- Form Agenda Baru -->
+        <!-- 5. Form Agenda Baru -->
         <div class="card" style="border-top: 4px solid #8e44ad;">
             <h2>🗓️ Tambah Agenda Kegiatan</h2>
             <form id="formAgenda">
@@ -158,31 +183,6 @@
                 
                 <button type="submit" style="background:#8e44ad;">Simpan Agenda Baru</button>
                 <div id="msgAgenda" class="msg"></div>
-            </form>
-        </div>
-
-        <!-- Form Iuran Lama -->
-        <div class="card" style="border-top: 4px solid #2980b9;">
-            <h2>📝 Input Pembayaran Iuran Rutin</h2>
-            <form id="formIuran">
-                <input type="hidden" name="action" value="inputIuran">
-                <div class="dashboard-grid">
-                    <div class="form-group"><label>Tanggal</label><input type="date" name="tanggal" required></div>
-                    <div class="form-group"><label>ID KK</label><input type="text" name="idKK" placeholder="P02W19..." required></div>
-                    <div class="form-group">
-                        <label>Bulan Ke- (1-12)</label>
-                        <input type="number" name="bulan" min="1" max="12" required>
-                    </div>
-                </div>
-                <div class="dashboard-grid">
-                    <div class="form-group">
-                        <label>Jenis</label><select name="jenisIuran"><option value="Iuran lingkungan">Lingkungan</option><option value="SSYA">SSYA</option></select>
-                    </div>
-                    <div class="form-group"><label>Nominal (Rp)</label><input type="number" name="jumlah" required></div>
-                    <div class="form-group"><label>Metode</label><select name="metode"><option>Tunai</option><option>Transfer</option></select></div>
-                </div>
-                <button type="submit">Simpan Iuran Rutin</button>
-                <div id="msgIuran" class="msg"></div>
             </form>
         </div>
         
